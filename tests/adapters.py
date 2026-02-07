@@ -572,6 +572,9 @@ def run_train_bpe(
     output its vocabulary and merges.
 
     Args:
+        input_path: str 包含 BPE 分词器训练数据的文本文件的路径。
+        vocab_size: int 一个正整数，定义了最大最终词汇表大小（包括初始字节词汇表、合并产生的词汇表项以及任何特殊标记）。
+        special_tokens: list[str] 要添加到词汇表的字符串列表。这些特殊标记不会影响 BPE 训练。
         input_path (str | os.PathLike): Path to BPE tokenizer training data.
         vocab_size (int): Total number of items in the tokenizer's vocabulary (including special tokens).
         special_tokens (list[str]): A list of string special tokens to be added to the tokenizer vocabulary.
@@ -581,6 +584,8 @@ def run_train_bpe(
 
     Returns:
         tuple[dict[int, bytes], list[tuple[bytes, bytes]]]:
+            vocab: dict[int, bytes] 分词器词汇表，从 int（词汇表中的标记 ID）到 bytes（标记字节）的映射。
+            merges: list[tuple[bytes, bytes]] 训练过程中生成的 BPE 合并列表。每个列表项
             vocab:
                 The trained tokenizer vocabulary, a mapping from int (token ID in the vocabulary)
                 to bytes (token bytes)
@@ -589,4 +594,9 @@ def run_train_bpe(
                 representing that <token1> was merged with <token2>.
                 Merges are ordered by order of creation.
     """
-    raise NotImplementedError
+    from cs336_basics.token.executor import tokenizer
+    a_tokenizer = tokenizer(
+        input_path=input_path, vocab_size=vocab_size, special_tokens=special_tokens)
+    a_tokenizer.run()
+    return a_tokenizer.vocab, a_tokenizer.merges
+    # raise NotImplementedError

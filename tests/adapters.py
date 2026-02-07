@@ -594,9 +594,28 @@ def run_train_bpe(
                 representing that <token1> was merged with <token2>.
                 Merges are ordered by order of creation.
     """
-    from cs336_basics.token.executor import tokenizer
-    a_tokenizer = tokenizer(
-        input_path=input_path, vocab_size=vocab_size, special_tokens=special_tokens)
-    a_tokenizer.run()
-    return a_tokenizer.vocab, a_tokenizer.merges
+    from cs336_basics.token.executor import tokenizer, parallel_word_counts
+
+    # --- 1. 配置参数 ---
+    num_proc = 4                              # 开启进程数
+
+    print(f"正在并行统计单词频次 (进程数: {num_proc})...")
+    word_counts_dict = parallel_word_counts(
+        str(input_path), num_processes=num_proc)
+    print(f"统计完成，共有 {len(word_counts_dict)} 个独特单词。")
+
+    print("正在初始化 BPE 训练器...")
+    bpe_trainer = tokenizer(
+        vocab_size=vocab_size,
+        special_tokens=special_tokens,
+        pat_string=word_counts_dict
+    )
+
+    print(f"开始训练，目标词表大小: {vocab_size}...")
+    bpe_trainer.run()
+
+    print("训练完成！")
+    print(f"最终合并规则数量: {len(bpe_trainer.merges)}")
+
+    return bpe_trainer.vocab, bpe_trainer.merges
     # raise NotImplementedError

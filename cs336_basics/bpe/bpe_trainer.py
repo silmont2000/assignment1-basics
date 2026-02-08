@@ -158,17 +158,27 @@ class bpe_trainer:
 
     def run(self, save=False):
         self.still_exist_multi_token = False
+        print(">>> 正在进行全局统计初始化...")
         self.global_initialization()
+        print(">>> 全局统计初始化完成。")
+
         for token in self.special_tokens:
             self.append_vocab(token.encode())
+        print(f">>> 特殊 Token 已添加到词表。当前词表大小: {len(self.vocab)}")
 
+        print(">>> 开始 BPE 合并循环...")
         while True:
             max_pair = self.find_max_pair()
 
+            current_vocab_size = len(self.vocab)
+            if current_vocab_size % 100 == 0:
+                print(f"    - 当前词表大小: {current_vocab_size}/{self.vocab_size}")
+
             if len(self.vocab) == self.vocab_size or len(max_pair) == 0:
                 # self.print_statistics(20)
-                print(self.merges)
+                # print(self.merges)
                 # print(self.vocab)
+                print(">>> 达到目标词表大小或无更多可合并项，停止训练。")
                 break
 
             self.still_exist_multi_token = max_pair[0][1] > 1
@@ -202,10 +212,14 @@ class bpe_trainer:
             "vocab": self.vocab
         }
         with open(path, "wb") as f:
+            print("save merges:", len(self.merges))
+            print("save vocab:", len(self.vocab))
             pickle.dump(data, f)
 
     def load_trained_bpe(self, path="tokenizer.pkl"):
         with open(path, "rb") as f:
             data = pickle.load(f)
+            print("load merges:", len(data["merges"]))
+            print("load vocab:", len(data["vocab"]))
             self.vocab = data["vocab"]
             self.merges = data["merges"]

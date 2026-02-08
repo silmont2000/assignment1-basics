@@ -2,6 +2,7 @@ import pprint
 from collections import Counter
 from collections import defaultdict
 import heapq
+import pickle
 
 times = 'times'
 pairs = 'pairs'
@@ -12,13 +13,17 @@ class bpe_trainer:
     def __init__(self,
                  vocab_size: int,
                  special_tokens: list[str],
-                 pat_string: dict):
+                 pat_string: dict,
+                 load_from_file: bool = False,
+                 file_path='tokenizer.pkl'):
         self.vocab_size = vocab_size
         self.special_tokens = special_tokens
         self.special_tokens_len = len(special_tokens)
         self.pat_string = pat_string
         self.vocab = {i: bytes([i]) for i in range(256)}
         self.merges: list[tuple[bytes, bytes]] = []
+        if load_from_file:
+            self.load_trained_bpe(file_path)
 
         self.still_exist_multi_token = True
         self.pair_counter = Counter()
@@ -151,17 +156,14 @@ class bpe_trainer:
 
         return [(best_pairs[0], actual_max)]
 
-    def run(self):
+    def run(self, save=False):
         self.still_exist_multi_token = False
         self.global_initialization()
         for token in self.special_tokens:
             self.append_vocab(token.encode())
 
         while True:
-            # i -= 1
             max_pair = self.find_max_pair()
-            # print("max_pair:", max_pair)
-            # self.print_statistics()
 
             if len(self.vocab) == self.vocab_size or len(max_pair) == 0:
                 # self.print_statistics(20)
@@ -177,13 +179,13 @@ class bpe_trainer:
             # self.print_statistics()
 
             if self.still_exist_multi_token == False:
-                # self.print_statistics(20)
-                # print(self.merges)
-                # print(self.vocab)
                 break
 
+        if save:
+            self.save_trained_bpe()
+
     def print_statistics(self, index=3):
-        print("======Displaying first 5 statistics items======")
+        print("====INFO===== Displaying first 5 statistics items")
         for i, (k, v) in enumerate(self.statistics.items()):
             if i >= index:
                 break
@@ -191,3 +193,19 @@ class bpe_trainer:
             pprint.pprint(v)
             print("-" * 20)
         print("\n\n")
+
+    def save_trained_bpe(self, path="tokenizer.pkl"):
+        if len(self.merges) < 1:
+            print("====ERROR===== bpe Never Trained")
+        data = {
+            "merges": self.merges,
+            "vocab": self.vocab
+        }
+        with open(path, "wb") as f:
+            pickle.dump(data, f)
+
+    def load_trained_bpe(self, path="tokenizer.pkl"):
+        with open(path, "rb") as f:
+            data = pickle.load(f)
+            self.vocab = data["vocab"]
+            self.merges = data["merges"]

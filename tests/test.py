@@ -1,7 +1,8 @@
 import sys
 import os
 
-from cs336_basics.bpe.parallel_executor import bpe_trainer, parallel_word_counts
+from cs336_basics.bpe.bpe_trainer import bpe_trainer
+from cs336_basics.bpe.parallel_executor import parallel_word_counts
 from cs336_basics.pretokenization_example import find_chunk_boundaries
 
 

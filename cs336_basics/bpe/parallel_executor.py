@@ -1,5 +1,4 @@
 from cs336_basics.pretokenization_example import find_chunk_boundaries
-from cs336_basics.bpe.bpe_trainer import bpe_trainer
 import regex as re
 from concurrent.futures import ProcessPoolExecutor
 from collections import Counter

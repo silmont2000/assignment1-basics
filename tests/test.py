@@ -26,7 +26,8 @@ if __name__ == "__main__":
     target_vocab_size = 300                   # 目标词表大小
 
     print(f"正在并行统计单词频次 (进程数: {num_proc})...")
-    word_counts_dict = parallel_word_counts(input_path, num_processes=num_proc)
+    word_counts_dict = parallel_word_counts(
+        input_path, num_processes=num_proc,  special_tokens=["<|endoftext|>"])
     print(f"统计完成，共有 {len(word_counts_dict)} 个独特单词。")
 
     print("正在初始化 BPE 训练器...")

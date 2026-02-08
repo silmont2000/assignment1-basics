@@ -602,7 +602,7 @@ def run_train_bpe(
 
     print(f"正在并行统计单词频次 (进程数: {num_proc})...")
     word_counts_dict = parallel_word_counts(
-        str(input_path), num_processes=num_proc)
+        str(input_path), num_processes=num_proc, special_tokens=special_tokens)
     print(f"统计完成，共有 {len(word_counts_dict)} 个独特单词。")
 
     print("正在初始化 BPE 训练器...")

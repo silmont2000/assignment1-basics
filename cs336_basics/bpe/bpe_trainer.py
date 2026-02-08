@@ -35,18 +35,18 @@ class bpe_trainer:
                 self.statistics[k] = {
                     times: v,
                     pairs: Counter(),
-                    tokens: [i.encode("utf-8") for i in k]
+                    tokens: [i for i in k]
                 }
                 continue
 
             self.statistics[k] = {
                 times: v,
                 pairs: Counter(),
-                tokens: [i.encode("utf-8") for i in k]
+                tokens: [i for i in k]
 
             }
             for i in range(len(k)-1):
-                cur_pair = (k[i].encode(), k[i+1].encode())
+                cur_pair = (k[i], k[i+1])
                 self.statistics[k][pairs][cur_pair] += 1
                 self.pair_to_statistics[cur_pair].add(k)
 

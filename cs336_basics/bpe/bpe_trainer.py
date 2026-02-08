@@ -3,10 +3,7 @@ from collections import Counter
 from collections import defaultdict
 import heapq
 import pickle
-
-times = 'times'
-pairs = 'pairs'
-tokens = 'tokens'
+from cs336_basics.bpe.common import *
 
 
 class bpe_trainer:
@@ -20,10 +17,10 @@ class bpe_trainer:
         self.special_tokens = special_tokens
         self.special_tokens_len = len(special_tokens)
         self.pat_string = pat_string
-        self.vocab = {i: bytes([i]) for i in range(256)}
+        self.vocab = {i: bytes([i]) for i in range(STRAT_OFFSET)}
         self.merges: list[tuple[bytes, bytes]] = []
         if load_from_file:
-            self.load_trained_bpe(file_path)
+            self.load_bpe(file_path)
 
         self.still_exist_multi_token = True
         self.pair_counter = Counter()
@@ -34,28 +31,9 @@ class bpe_trainer:
     def append_vocab(self, token: bytes):
         self.vocab[len(self.vocab)] = token
 
-    def global_initialization(self):
-        self.statistics = {}
-        self.pair_to_statistics = defaultdict(set)
-        for k, v in self.pat_string.items():
-            if len(k) < 2:
-                self.statistics[k] = {
-                    times: v,
-                    pairs: Counter(),
-                    tokens: [i for i in k]
-                }
-                continue
-
-            self.statistics[k] = {
-                times: v,
-                pairs: Counter(),
-                tokens: [i for i in k]
-
-            }
-            for i in range(len(k)-1):
-                cur_pair = (k[i], k[i+1])
-                self.statistics[k][pairs][cur_pair] += 1
-                self.pair_to_statistics[cur_pair].add(k)
+    def initialization(self):
+        self.statistics, self.pair_to_statistics = statistics_initialization(
+            self.pat_string)
 
         # 初始化一下全局counter
         self.find_max_pair()
@@ -111,7 +89,7 @@ class bpe_trainer:
             self.pair_counter[max_pair] = 0
             v[pairs] = +cur_pairs
 
-        del self.pair_to_statistics[max_pair]
+        # del self.pair_to_statistics[max_pair]
 
     def find_max_pair(self):
         best_pairs = []
@@ -159,7 +137,7 @@ class bpe_trainer:
     def run(self, save=False):
         self.still_exist_multi_token = False
         print(">>> 正在进行全局统计初始化...")
-        self.global_initialization()
+        self.initialization()
         print(">>> 全局统计初始化完成。")
 
         for token in self.special_tokens:
@@ -192,7 +170,7 @@ class bpe_trainer:
                 break
 
         if save:
-            self.save_trained_bpe()
+            self.save_bpe()
 
     def print_statistics(self, index=3):
         print("====INFO===== Displaying first 5 statistics items")
@@ -204,7 +182,7 @@ class bpe_trainer:
             print("-" * 20)
         print("\n\n")
 
-    def save_trained_bpe(self, path="tokenizer.pkl"):
+    def save_bpe(self, path="tokenizer.pkl"):
         if len(self.merges) < 1:
             print("====ERROR===== bpe Never Trained")
         data = {
@@ -216,10 +194,7 @@ class bpe_trainer:
             print("save vocab:", len(self.vocab))
             pickle.dump(data, f)
 
-    def load_trained_bpe(self, path="tokenizer.pkl"):
-        with open(path, "rb") as f:
-            data = pickle.load(f)
-            print("load merges:", len(data["merges"]))
-            print("load vocab:", len(data["vocab"]))
-            self.vocab = data["vocab"]
-            self.merges = data["merges"]
+    def load_bpe(self, path="tokenizer.pkl"):
+        data = load_trained_bpe(path)
+        self.vocab = data["vocab"]
+        self.merges = data["merges"]

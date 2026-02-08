@@ -547,7 +547,12 @@ def get_tokenizer(
     """Given a vocabulary, a list of merges, and a list of special tokens,
     return a BPE tokenizer that uses the provided vocab, merges, and special tokens.
 
+
     Args:
+        vocab (dict[int, bytes]): 分词器词表。这是一个映射表，键（Key）为整数（词表中的 Token ID），值（Value）为字节串（Token 对应的字节内容）。
+        merges (list[tuple[bytes, bytes]]): BPE 合并规则。列表中的每一项都是一个字节对元组 (<token1>, <token2>)，代表 <token1> 与 <token2> 发生了合并。
+            注：合并规则是按照它们创建的先后顺序排列的。
+        special_tokens (list[str] | None): 分词器的特殊 Token 列表（字符串格式）。这些字符串永远不会被拆分成多个 Token，而会始终作为一个整体被保留。
         vocab (dict[int, bytes]): The tokenizer vocabulary, a mapping from int (token ID in the vocabulary)
             to bytes (token bytes)
         merges (list[tuple[bytes, bytes]]): BPE merges. Each list item is a tuple of bytes (<token1>, <token2>),
@@ -557,9 +562,16 @@ def get_tokenizer(
             be split into multiple tokens, and will always be kept as a single token.
 
     Returns:
+        一个使用提供的 vocab（词表）、merges（合并规则）和 special_tokens（特殊 Token）构建的 BPE 分词器实例。
         A BPE tokenizer that uses the provided vocab, merges, and special tokens.
     """
-    raise NotImplementedError
+    from cs336_basics.bpe.bpe_tokenizer import bpe_tokenizer
+    tokenizer = bpe_tokenizer(
+        vocab=vocab, merges=merges, special_tokens=special_tokens
+    )
+    return tokenizer
+
+    # raise NotImplementedError
 
 
 def run_train_bpe(

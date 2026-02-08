@@ -23,7 +23,8 @@ def _process_chunk(file_path: str, start: int, end: int, special_tokens: list[st
                                       for st in special_tokens))
     fragments = special_pat.split(text)
     all_tokens = []
-    PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
+    PAT = re.compile(
+        """'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+""")
     for fragment in fragments:
         tokens = re.findall(PAT, fragment)
         # all_tokens.extend(tokens)

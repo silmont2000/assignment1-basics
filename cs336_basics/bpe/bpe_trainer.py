@@ -1,60 +1,13 @@
-from cs336_basics.pretokenization_example import find_chunk_boundaries
-import os
-import regex as re
 import pprint
-from concurrent.futures import ProcessPoolExecutor
 from collections import Counter
-import regex as re
-
-# Worker function must be top-level for pickling
+from collections import defaultdict
 
 times = 'times'
 pairs = 'pairs'
 tokens = 'tokens'
 
 
-def merge_statistics(stats1, stats2):
-    for word, info in stats2.items():
-        if word in stats1:
-            stats1[word]['times'] += info['times']
-        else:
-            stats1[word] = info
-    return stats1
-
-
-def _process_chunk(file_path: str, start: int, end: int) -> dict:
-    with open(file_path, "rb") as f:
-        f.seek(start)
-        chunk_bytes = f.read(end - start)
-        text = chunk_bytes.decode("utf-8", errors="ignore")
-
-    PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
-    tokens = re.findall(PAT, text)
-
-    return Counter(tokens)
-
-
-def parallel_word_counts(input_path: str, num_processes: int = 4) -> dict:
-    """Parallel processing to get initial word counts from a large file."""
-    with open(input_path, "rb") as f:
-        boundaries = find_chunk_boundaries(f, num_processes, b"<|endoftext|>")
-
-    tasks = []
-    for start, end in zip(boundaries[:-1], boundaries[1:]):
-        tasks.append((input_path, start, end))
-
-    total_counts = Counter()
-    with ProcessPoolExecutor(max_workers=num_processes) as executor:
-        futures = [executor.submit(_process_chunk, *task) for task in tasks]
-
-        for future in futures:
-            chunk_counts = future.result()
-            total_counts.update(chunk_counts)
-
-    return dict(total_counts)
-
-
-class tokenizer:
+class bpe_trainer:
     def __init__(self,
                  vocab_size: int,
                  special_tokens: list[str],
@@ -75,15 +28,8 @@ class tokenizer:
         self.vocab[len(self.vocab)] = token
 
     def global_initialization(self):
-        # PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
-        # pat_string = re.findall(PAT, text)
-
-        # counts = {}
-        # for item in self.pat_string:
-        #     counts[item] = counts.get(item, 0) + 1
-        # print(counts)
-
         self.statistics = {}
+        self.pair_to_statistics = defaultdict(set)
         for k, v in self.pat_string.items():
             if len(k) < 2:
                 self.statistics[k] = {
@@ -102,12 +48,16 @@ class tokenizer:
             for i in range(len(k)-1):
                 cur_pair = (k[i].encode(), k[i+1].encode())
                 self.statistics[k][pairs][cur_pair] += 1
+                self.pair_to_statistics[cur_pair].add(k)
 
         return self.statistics
 
     def update_pairs_in_words(self, max_pair: tuple):
         new_token = b''.join(max_pair)
-        for _, (k, v) in enumerate(self.statistics.items()):
+        affected_words = self.pair_to_statistics[max_pair]
+
+        for k in affected_words:
+            v = self.statistics[k]
             cur_pairs = v[pairs]
             cur_tokens = v[tokens]
             result_tokens = []
@@ -119,12 +69,14 @@ class tokenizer:
                         left_old_pair = (result_tokens[-1], cur_tokens[i])
                         cur_pairs[left_old_pair] -= 1
                         cur_pairs[left_new_pair] += 1
+                        self.pair_to_statistics[left_new_pair].add(k)
 
                     if i < len(cur_tokens)-2:
                         right_new_pair = (new_token, cur_tokens[i+2])
                         right_old_pair = (cur_tokens[i+1], cur_tokens[i+2])
                         cur_pairs[right_old_pair] -= 1
                         cur_pairs[right_new_pair] += 1
+                        self.pair_to_statistics[right_new_pair].add(k)
 
                     result_tokens.append(new_token)
                     i += 2
@@ -135,6 +87,8 @@ class tokenizer:
             v[tokens] = result_tokens
             del cur_pairs[max_pair]
             v[pairs] = +cur_pairs
+
+        del self.pair_to_statistics[max_pair]
 
     def find_max_pair(self):
         tmp = Counter()
@@ -163,7 +117,7 @@ class tokenizer:
             if len(self.vocab) == self.vocab_size or len(max_pair) == 0:
                 # self.print_statistics(20)
                 # print(self.merges)
-                print(self.vocab)
+                # print(self.vocab)
                 break
 
             self.still_exist_multi_token = max_pair[0][1] > 1
@@ -175,7 +129,7 @@ class tokenizer:
 
             if self.still_exist_multi_token == False:
                 # self.print_statistics(20)
-                print(self.merges)
+                # print(self.merges)
                 # print(self.vocab)
                 break
 

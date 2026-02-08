@@ -1,7 +1,7 @@
 import sys
 import os
 
-from cs336_basics.token.executor import tokenizer, parallel_word_counts
+from cs336_basics.bpe.parallel_executor import bpe_trainer, parallel_word_counts
 from cs336_basics.pretokenization_example import find_chunk_boundaries
 
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     print(f"统计完成，共有 {len(word_counts_dict)} 个独特单词。")
 
     print("正在初始化 BPE 训练器...")
-    bpe_trainer = tokenizer(
+    bpe_trainer = bpe_trainer(
         vocab_size=target_vocab_size,
         special_tokens=["<|endoftext|>"],
         pat_string=word_counts_dict

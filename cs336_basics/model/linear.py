@@ -15,4 +15,4 @@ class Linear(nn.Module):
         return einsum(x, self.W, "... d_in, d_in d_out -> ... d_out")
 
     def forward_with_w(self, x: torch.Tensor, w: torch.Tensor):
-        return einsum(x, w.T, "... d_in, d_in d_out -> ... d_out")
+        return einsum(x, w, "... d_in, d_out d_in -> ... d_out")

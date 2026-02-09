@@ -385,7 +385,11 @@ def run_rmsnorm(
         Float[Tensor,"... d_model"]: Tensor of with the same shape as `in_features` with the output of running
         RMSNorm of the `in_features`.
     """
-    raise NotImplementedError
+
+    from cs336_basics.model.rmsnorm import RMSNorm
+    rmsnorm_layer = RMSNorm(d_model=d_model, eps=eps)
+    return rmsnorm_layer.forward_with_w(x=in_features, g=weights)
+    # raise NotImplementedError
 
 
 def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:

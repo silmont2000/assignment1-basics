@@ -8,13 +8,9 @@ class RMSNorm(nn.Module):
         super().__init__()
         self.eps = eps
         self.d_model = d_model
-        # self.device = device
-        # self.dtype = dtype
 
         matrix = torch.empty((1, d_model),
                              device=device, dtype=dtype)
-        # matrix = torch.empty((num_embeddings, embedding_dim),
-        #                      device=device, dtype=dtype)
         torch.nn.init.trunc_normal_(matrix)
         self.g = nn.Parameter(matrix)
 

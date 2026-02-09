@@ -31,7 +31,8 @@ def run_linear(
 
     from cs336_basics.model.linear import Linear
     linear_layer = Linear(in_features=d_in, out_features=d_out)
-    return linear_layer.forward_with_w(in_features, weights)
+    linear_layer.W.data = weights
+    return linear_layer.forward(in_features)
     # raise NotImplementedError
 
 
@@ -56,7 +57,9 @@ def run_embedding(
     from cs336_basics.model.embedding import Embedding
     embedding_layer = Embedding(
         num_embeddings=vocab_size, embedding_dim=d_model)
-    return embedding_layer.forward_with_w(token_ids=token_ids, w=weights)
+
+    embedding_layer.embedding.data = weights
+    return embedding_layer.forward(token_ids=token_ids)
 
     raise NotImplementedError
 
@@ -90,7 +93,18 @@ def run_swiglu(
     # swiglu.w1.weight.data = w1_weight
     # swiglu.w2.weight.data = w2_weight
     # swiglu.w3.weight.data = w3_weight
-    raise NotImplementedError
+    from cs336_basics.model.swiglu import SwiGLU
+
+    state_dict = {
+        "W1": w1_weight,
+        "W2": w2_weight,
+        "W3": w3_weight
+    }
+    swiglu_layer = SwiGLU(d_model=d_model, d_ff=d_ff)
+    swiglu_layer.load_state_dict(state_dict)
+    return swiglu_layer.forward(x=in_features)
+
+    # raise NotImplementedError
 
 
 def run_scaled_dot_product_attention(
@@ -388,7 +402,8 @@ def run_rmsnorm(
 
     from cs336_basics.model.rmsnorm import RMSNorm
     rmsnorm_layer = RMSNorm(d_model=d_model, eps=eps)
-    return rmsnorm_layer.forward_with_w(x=in_features, g=weights)
+    rmsnorm_layer.g.data = weights
+    return rmsnorm_layer.forward(x=in_features)
     # raise NotImplementedError
 
 

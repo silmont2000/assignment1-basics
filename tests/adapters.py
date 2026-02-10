@@ -221,6 +221,10 @@ def run_rope(
     Returns:
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
+    from cs336_basics.model.rope import RotaryPositionalEmbedding
+    RoPE_layer = RotaryPositionalEmbedding(
+        theta=theta, d_k=d_k, max_seq_len=max_seq_len)
+    return RoPE_layer.forward(x=in_query_or_key, token_positions=token_positions)
     raise NotImplementedError
 
 

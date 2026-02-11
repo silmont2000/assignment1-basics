@@ -61,7 +61,7 @@ def run_embedding(
     embedding_layer.embedding.data = weights
     return embedding_layer.forward(token_ids=token_ids)
 
-    raise NotImplementedError
+    # raise NotImplementedError
 
 
 def run_swiglu(
@@ -211,7 +211,18 @@ def run_multihead_self_attention_with_rope(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+
+    from cs336_basics.model.multihead_attention import MultiHeadAttention
+    multi_head_attention_layer = MultiHeadAttention(
+        d_model=d_model, num_heads=num_heads, theta=theta, max_seq_len=max_seq_len)
+    multi_head_attention_layer.WQ.W.data = q_proj_weight
+    multi_head_attention_layer.WK.W.data = k_proj_weight
+    multi_head_attention_layer.WV.W.data = v_proj_weight
+    multi_head_attention_layer.WO.W.data = o_proj_weight
+    attention = multi_head_attention_layer.forward(
+        x=in_features, token_positions=token_positions)
+    return attention
+    # raise NotImplementedError
 
 
 def run_rope(
@@ -434,7 +445,9 @@ def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
         Float[Tensor,"..."]: of with the same shape as `in_features` with the output of applying
         SiLU to each element.
     """
-    raise NotImplementedError
+    from cs336_basics.model.swiglu import SiLU
+    return SiLU(x=in_features)
+    # raise NotImplementedError
 
 
 def run_get_batch(

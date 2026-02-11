@@ -125,6 +125,8 @@ def run_scaled_dot_product_attention(
     Returns:
         Float[Tensor, " ... queries d_v"]: Output of SDPA
     """
+    from cs336_basics.model.common import scaled_dot_product_attention
+    return scaled_dot_product_attention(Q, K, V, mask)
     raise NotImplementedError
 
 
@@ -159,7 +161,17 @@ def run_multihead_self_attention(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+
+    from cs336_basics.model.multihead_attention import MultiHeadAttention
+    multi_head_attention_layer = MultiHeadAttention(
+        d_model=d_model, num_heads=num_heads)
+    multi_head_attention_layer.WQ.W.data = q_proj_weight
+    multi_head_attention_layer.WK.W.data = k_proj_weight
+    multi_head_attention_layer.WV.W.data = v_proj_weight
+    multi_head_attention_layer.WO.W.data = o_proj_weight
+    return multi_head_attention_layer.forward(x=in_features)
+
+    # raise NotImplementedError
 
 
 def run_multihead_self_attention_with_rope(
@@ -461,6 +473,8 @@ def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, "
         Float[Tensor, "..."]: Tensor of with the same shape as `in_features` with the output of
         softmax normalizing the specified `dim`.
     """
+    from cs336_basics.model.common import softmax
+    return softmax(x=in_features, i=dim)
     raise NotImplementedError
 
 

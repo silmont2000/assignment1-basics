@@ -8,7 +8,7 @@ from jaxtyping import Float
 
 
 class RotaryPositionalEmbedding(nn.Module):
-    def __init__(self, theta: float, d_k: int, max_seq_len: int, device=None):
+    def __init__(self, theta: float, d_k: int, max_seq_len: int):
         super().__init__()
         self.d_k = d_k
 

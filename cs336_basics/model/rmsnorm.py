@@ -12,7 +12,7 @@ class RMSNorm(nn.Module):
         matrix = torch.empty((1, d_model),
                              device=device, dtype=dtype)
         torch.nn.init.trunc_normal_(matrix)
-        self.g = nn.Parameter(matrix)
+        self.W = nn.Parameter(matrix)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         in_dtype = x.dtype
@@ -21,7 +21,7 @@ class RMSNorm(nn.Module):
         tmp = einsum(x, x, "... d_model, ... d_model -> ...")
         tmp = tmp/self.d_model + self.eps
         rms = torch.sqrt(tmp).unsqueeze(-1)
-        result = x/rms*self.g
+        result = x/rms*self.W
         return result.to(in_dtype)
 
     def forward_with_w(self, x: torch.Tensor, g: torch.Tensor):

@@ -321,7 +321,25 @@ def run_transformer_block(
         Float[Tensor, "batch sequence_length d_model"] Tensor with the output of
         running the Transformer block on the input features while using RoPE.
     """
-    raise NotImplementedError
+    from cs336_basics.model.transformer_block import TransformerBlock
+    block = TransformerBlock(d_model=d_model, num_heads=num_heads,
+                             d_ff=d_ff, theta=theta, max_seq_len=max_seq_len)
+    block.multi_head_attention_layer.WQ.W.data = weights['attn.q_proj.weight']
+    block.multi_head_attention_layer.WK.W.data = weights['attn.k_proj.weight']
+    block.multi_head_attention_layer.WV.W.data = weights['attn.v_proj.weight']
+    block.multi_head_attention_layer.WO.W.data = weights['attn.output_proj.weight']
+    block.RMSNorm_layer1.W.data = weights['ln1.weight']
+    block.RMSNorm_layer2.W.data = weights['ln2.weight']
+
+    state_dict = {
+        "W1": weights['ffn.w1.weight'],
+        "W2": weights['ffn.w2.weight'],
+        "W3": weights['ffn.w3.weight']
+    }
+    block.SwiGLU_layer.load_state_dict(state_dict)
+    return block.forward(in_features)
+
+    # raise NotImplementedError
 
 
 def run_transformer_lm(
@@ -429,7 +447,7 @@ def run_rmsnorm(
 
     from cs336_basics.model.rmsnorm import RMSNorm
     rmsnorm_layer = RMSNorm(d_model=d_model, eps=eps)
-    rmsnorm_layer.g.data = weights
+    rmsnorm_layer.W.data = weights
     return rmsnorm_layer.forward(x=in_features)
     # raise NotImplementedError
 

@@ -421,7 +421,46 @@ def run_transformer_lm(
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
     """
-    raise NotImplementedError
+    from cs336_basics.transformer_lm import TransformerLM
+    model = TransformerLM(
+        vocab_size=vocab_size,
+        max_seq_len=context_length,
+        d_model=d_model,
+        num_layers=num_layers,
+        num_heads=num_heads,
+        d_ff=d_ff,
+        theta=rope_theta,
+    )
+    model.token_embedding.weight.data = weights["token_embeddings.weight"]
+    for i in range(num_layers):
+        block = model.blocks[i]
+        prefix = f"layers.{i}."
+
+        # fmt: off
+        # Attention weights
+        block.multi_head_attention_layer.WQ.W.data = weights[f"{prefix}attn.q_proj.weight"] # type: ignore
+        block.multi_head_attention_layer.WK.W.data = weights[f"{prefix}attn.k_proj.weight"] # type: ignore
+        block.multi_head_attention_layer.WV.W.data = weights[f"{prefix}attn.v_proj.weight"] # type: ignore
+        block.multi_head_attention_layer.WO.W.data = weights[f"{prefix}attn.output_proj.weight"] # type: ignore
+
+        # RMSNorm weights
+        block.RMSNorm_layer1.W.data = weights[f"{prefix}ln1.weight"] # type: ignore
+        block.RMSNorm_layer2.W.data = weights[f"{prefix}ln2.weight"] # type: ignore
+
+        # SwiGLU weights
+        swiglu_state = {
+            "W1": weights[f"{prefix}ffn.w1.weight"],
+            "W2": weights[f"{prefix}ffn.w2.weight"],
+            "W3": weights[f"{prefix}ffn.w3.weight"]
+        }
+        block.SwiGLU_layer.load_state_dict(swiglu_state) # type: ignore
+        # fmt: on
+
+    # Final norm and LM head
+    model.final_norm.W.data = weights["ln_final.weight"]
+    model.final_linear.W.data = weights["lm_head.weight"]
+
+    return model.forward(in_indices)
 
 
 def run_rmsnorm(

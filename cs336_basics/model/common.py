@@ -6,7 +6,7 @@ from jaxtyping import Bool, Float, Int
 from einops import einsum
 
 
-def softmax(x: Tensor, i: int):
+def softmax(x: Tensor, i: int = -1):
     max_x = x.max(dim=i, keepdim=True).values
     numerator = Tensor.exp(x-max_x)
     denominator = Tensor.sum(numerator, dim=i, keepdim=True)

@@ -32,13 +32,11 @@ class bpe_trainer:
         self.vocab[len(self.vocab)] = token
 
     def initialization(self):
-        self.statistics, self.pair_to_statistics, self.pair_counter = statistics_initialization(
+        self.statistics, self.pair_to_statistics = statistics_initialization(
             self.pat_string)
 
         # 初始化一下全局counter
-        self.maxheap = [(-count, pair)
-                        for pair, count in self.pair_counter.items()]
-        heapq.heapify(self.maxheap)
+        self.find_max_pair()
         return self.statistics
 
     def update_pairs_in_words(self, max_pair: tuple):
@@ -48,6 +46,7 @@ class bpe_trainer:
         for k in affected_words:
             v = self.statistics[k]
             cur_weight = v[times]
+            cur_pairs = v[pairs]
             cur_tokens = v[tokens]
             result_tokens = []
             i = 0
@@ -56,7 +55,8 @@ class bpe_trainer:
                     if i > 0:
                         left_new_pair = (result_tokens[-1], new_token)
                         left_old_pair = (result_tokens[-1], cur_tokens[i])
-
+                        cur_pairs[left_old_pair] -= 1
+                        cur_pairs[left_new_pair] += 1
                         self.pair_to_statistics[left_new_pair].add(k)
                         self.pair_counter[left_old_pair] -= cur_weight
                         self.pair_counter[left_new_pair] += cur_weight
@@ -68,7 +68,8 @@ class bpe_trainer:
                     if i < len(cur_tokens)-2:
                         right_new_pair = (new_token, cur_tokens[i+2])
                         right_old_pair = (cur_tokens[i+1], cur_tokens[i+2])
-
+                        cur_pairs[right_old_pair] -= 1
+                        cur_pairs[right_new_pair] += 1
                         self.pair_to_statistics[right_new_pair].add(k)
                         self.pair_counter[right_old_pair] -= cur_weight
                         self.pair_counter[right_new_pair] += cur_weight
@@ -84,32 +85,50 @@ class bpe_trainer:
                     i += 1
 
             v[tokens] = result_tokens
+            del cur_pairs[max_pair]
             self.pair_counter[max_pair] = 0
+            v[pairs] = +cur_pairs
+
+        # del self.pair_to_statistics[max_pair]
 
     def find_max_pair(self):
         best_pairs = []
         actual_max = -1
+        heap = False
+        if len(self.pair_counter) == 0:
+            # if len(self.pair_counter) != -1:
+            tmp = Counter()
+            for _, (_, v) in enumerate(self.statistics.items()):
+                for pair in v[pairs]:
+                    tmp[pair] += v[pairs][pair] * v[times]
+            actual_max = max(tmp.values())
+            self.pair_counter = tmp
+            # 初始化堆 (负号是为了实现大顶堆)
+            self.maxheap = [(-count, pair)
+                            for pair, count in self.pair_counter.items()]
+            heapq.heapify(self.maxheap)
 
-        while self.maxheap:
-            neg_freq, pair = heapq.heappop(self.maxheap)
-            cur_freq = -neg_freq
-            # 这个不一定是真的最大值，和当前值比较一下，如果是旧的，因为已经pop了也就删了，所以不太影响
-            actual_freq = self.pair_counter.get(pair, 0)
-            if actual_max < 0 and cur_freq == actual_freq and actual_freq > 0:
-                actual_max = actual_freq
-                best_pairs.append(pair)
-            elif cur_freq == actual_max and cur_freq == actual_freq and actual_freq > 0:
-                best_pairs.append(pair)
-            elif cur_freq < actual_max:
-                heapq.heappush(self.maxheap, (neg_freq, pair))
-                break
-
-        if not best_pairs:
-            return []
+            best_pairs = [p for p, f in tmp.items() if f == actual_max]
+        else:
+            heap = True
+            actual_max = -1
+            while self.maxheap:
+                neg_freq, pair = heapq.heappop(self.maxheap)
+                cur_freq = -neg_freq
+                # 这个不一定是真的最大值，和当前值比较一下，如果是旧的，因为已经pop了也就删了，所以不太影响
+                actual_freq = self.pair_counter.get(pair, 0)
+                if actual_max < 0 and cur_freq == actual_freq and actual_freq > 0:
+                    actual_max = actual_freq
+                    best_pairs.append(pair)
+                elif cur_freq == actual_max and cur_freq == actual_freq and actual_freq > 0:
+                    best_pairs.append(pair)
+                elif cur_freq < actual_max:
+                    heapq.heappush(self.maxheap, (neg_freq, pair))
+                    break
 
         best_pairs.sort(reverse=True)
         i = 1
-        while i < len(best_pairs):
+        while heap and i < len(best_pairs):
             heapq.heappush(self.maxheap, (-actual_max, best_pairs[i]))
             i += 1
 

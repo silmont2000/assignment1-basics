@@ -28,8 +28,8 @@ class TransformerBlock(nn.Module):
             token_positions = torch.arange(t, device=x.device)
         attention = self.multi_head_attention_layer.forward(
             x=rms1, token_positions=token_positions)
-        res1 = x+attention
+        res1 = x + attention
         rms2 = self.RMSNorm_layer2.forward(res1)
         swiglu = self.SwiGLU_layer.forward(rms2)
-        res2 = res1+swiglu
+        res2 = res1 + swiglu
         return res2

@@ -33,6 +33,7 @@ class bpe_tokenizer:
 
         for k in affected_words:
             v = statistics[k]
+            cur_pairs = v[pairs]
             cur_tokens = v[tokens]
             result_tokens = []
             i = 0
@@ -40,10 +41,16 @@ class bpe_tokenizer:
                 if (i < len(cur_tokens)-1) and ((cur_tokens[i], cur_tokens[i+1]) == max_pair):
                     if i > 0:
                         left_new_pair = (result_tokens[-1], new_token)
+                        left_old_pair = (result_tokens[-1], cur_tokens[i])
+                        cur_pairs[left_old_pair] -= 1
+                        cur_pairs[left_new_pair] += 1
                         pair_to_statistics[left_new_pair].add(k)
 
                     if i < len(cur_tokens)-2:
                         right_new_pair = (new_token, cur_tokens[i+2])
+                        right_old_pair = (cur_tokens[i+1], cur_tokens[i+2])
+                        cur_pairs[right_old_pair] -= 1
+                        cur_pairs[right_new_pair] += 1
                         pair_to_statistics[right_new_pair].add(k)
 
                     i += 2
@@ -53,6 +60,10 @@ class bpe_tokenizer:
                     i += 1
 
             v[tokens] = result_tokens
+            del cur_pairs[max_pair]
+            v[pairs] = +cur_pairs
+
+        # del self.pair_to_statistics[max_pair]
 
     def normal_encode(self, text: str) -> list[int]:
         words_to_token__cache: dict[bytes, list[int]] = {}
@@ -65,7 +76,7 @@ class bpe_tokenizer:
         for t in patted_words:
             byte_tuple = tuple(bytes([b]) for b in t.encode("utf-8"))
             bytes_words.append(byte_tuple)
-        statistics, pair_to_statistics, _ = statistics_initialization(
+        statistics, pair_to_statistics = statistics_initialization(
             Counter(bytes_words))
 
         # 这里先按merges完成分词

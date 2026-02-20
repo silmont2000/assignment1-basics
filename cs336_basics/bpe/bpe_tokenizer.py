@@ -19,8 +19,7 @@ class bpe_tokenizer:
         self.special_tokens: list[str] = [] if (
             special_tokens is None) else special_tokens
 
-        # self.statistics, self.pair_to_statistics = statistics_initialization(
-        #     self.pat_string)
+        self.cache = {}
 
     # @classmethod
     # def from_files(cls, vocab_filepath, merges_filepath, special_tokens=None):
@@ -54,40 +53,41 @@ class bpe_tokenizer:
 
             v[tokens] = result_tokens
 
+    def _encode_single_word(self, word_bytes: bytes) -> list[int]:
+        """对单个单词进行 BPE 编码的逻辑"""
+        if word_bytes in self.cache:
+            return self.cache[word_bytes]
+
+        # 将单词拆成单个字节的列表
+        # 注意：这里你可以使用更高效的循环来应用 merges
+        tokens = [bytes([b]) for b in word_bytes]
+
+        for pair in self.merges:
+            if len(tokens) <= 1:
+                break
+            first, second = pair
+            new_tokens = []
+            i = 0
+            while i < len(tokens):
+                if i < len(tokens) - 1 and tokens[i] == first and tokens[i+1] == second:
+                    new_tokens.append(first + second)
+                    i += 2
+                else:
+                    new_tokens.append(tokens[i])
+                    i += 1
+            tokens = new_tokens
+
+        ids = [self.reverse_vocab[token] for token in tokens]
+        self.cache[word_bytes] = ids
+        return ids
+
     def normal_encode(self, text: str) -> list[int]:
-        words_to_token__cache: dict[bytes, list[int]] = {}
-        # for i in self.special_tokens:
-        #     token = i.encode()
-        #     words_to_token__cache[token] = [self.reverse_vocab[token]]
-
         patted_words = re.findall(PAT, text)
-        bytes_words = []
-        for t in patted_words:
-            byte_tuple = tuple(bytes([b]) for b in t.encode("utf-8"))
-            bytes_words.append(byte_tuple)
-        statistics, pair_to_statistics, _ = statistics_initialization(
-            Counter(bytes_words))
-
-        # 这里先按merges完成分词
-        for rule in self.merges:
-            self.update_pairs_in_words(
-                rule, statistics=statistics, pair_to_statistics=pair_to_statistics)
-
         output = []
-        for word in bytes_words:
-            cache = words_to_token__cache.get(word)
-            if cache:
-                output.extend(cache)
-            else:
-                cache = []
-                statistic = statistics[word]
-                token_list = statistic[tokens]
-                for token in token_list:
-                    cache.append(self.reverse_vocab[token])
-                words_to_token__cache[word] = cache
-                output.extend(cache)
-            # print("encode ", word, " to ", cache)
-
+        for word_str in patted_words:
+            word_bytes = word_str.encode("utf-8")
+            # 直接对每个词查缓存或编码
+            output.extend(self._encode_single_word(word_bytes))
         return output
 
     def encode(self, text: str) -> list[int]:

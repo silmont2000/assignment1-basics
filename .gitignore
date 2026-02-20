@@ -8,6 +8,7 @@ __pycache__/
 
 # big Files or data
 data/*
+tokenizer/*
 
 # Distribution / packaging
 .Python

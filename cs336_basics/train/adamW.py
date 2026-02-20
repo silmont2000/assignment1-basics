@@ -5,15 +5,16 @@ import math
 
 
 class AdamW(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, ε=1e-8, β1=0.99, β2=0.999, λ=1e-2):
+    def __init__(self, params, lr=1e-3, eps=1e-8, betas=(0.99, 0.999), weight_decay=1e-2):
 
+        β1, β2 = betas
         if lr < 0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if not 0.0 <= β1 < 1.0:
             raise ValueError(f"Invalid beta1 parameter: {β1}")
         if not 0.0 <= β2 < 1.0:
             raise ValueError(f"Invalid beta2 parameter: {β2}")
-        defaults = {"lr": lr, "ε": ε, "β1": β1, "β2": β2, "λ": λ}
+        defaults = {"lr": lr, "ε": eps, "β1": β1, "β2": β2, "λ": weight_decay}
         super().__init__(params, defaults)
         # param_groups是超参
         # state是要优化的变量，Parameter

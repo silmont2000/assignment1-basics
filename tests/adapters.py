@@ -577,14 +577,31 @@ def run_gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm:
 
     The gradients of the parameters (parameter.grad) should be modified in-place.
     """
-    raise NotImplementedError
+    from cs336_basics.train.common import gradient_clipping
+
+    return gradient_clipping(parameters, max_l2_norm)  # type: ignore
+    # raise NotImplementedError
 
 
 def get_adamw_cls() -> Any:
     """
     Returns a torch.optim.Optimizer that implements AdamW.
     """
-    raise NotImplementedError
+    from cs336_basics.train.adamW import AdamW as _AdamW
+
+    class AdamWAdapter(_AdamW):
+        def __init__(
+            self,
+            params,
+            lr: float = 1e-3,
+            weight_decay: float = 1e-2,
+            betas: tuple[float, float] = (0.9, 0.999),
+            eps: float = 1e-8,
+        ):
+            β1, β2 = betas
+            super().__init__(params, lr=lr, ε=eps, β1=β1, β2=β2, λ=weight_decay)
+
+    return AdamWAdapter
 
 
 def run_get_lr_cosine_schedule(
@@ -612,7 +629,9 @@ def run_get_lr_cosine_schedule(
     Returns:
         Learning rate at the given iteration under the specified schedule.
     """
-    raise NotImplementedError
+    from cs336_basics.train.common import cos_annealing_lr
+    return cos_annealing_lr(current_step=it, total_steps=cosine_cycle_iters, max_lr=max_learning_rate, min_lr=min_learning_rate, warmup_steps=warmup_iters)
+    # raise NotImplementedError
 
 
 def run_save_checkpoint(

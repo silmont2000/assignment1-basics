@@ -11,7 +11,7 @@ def test_get_batch():
     dataset = np.arange(0, 100)
     context_length = 7
     batch_size = 32
-    device = "cpu"
+    device = "mps"
 
     # Sanity check to make sure that the random samples are indeed somewhat random.
     starting_indices = Counter()
@@ -29,7 +29,8 @@ def test_get_batch():
         assert y.shape == (batch_size, context_length)
 
         # Make sure the y's are always offset by 1
-        np.testing.assert_allclose((x + 1).detach().numpy(), y.detach().numpy())
+        np.testing.assert_allclose(
+            (x + 1).detach().cpu().numpy(), y.detach().cpu().numpy())
 
         starting_indices.update(x[:, 0].tolist())
 
@@ -40,7 +41,8 @@ def test_get_batch():
     # Expected # of times that we see each starting index
     expected_count = (num_iters * batch_size) / num_possible_starting_indices
     standard_deviation = math.sqrt(
-        (num_iters * batch_size) * (1 / num_possible_starting_indices) * (1 - (1 / num_possible_starting_indices))
+        (num_iters * batch_size) * (1 / num_possible_starting_indices) *
+        (1 - (1 / num_possible_starting_indices))
     )
     # Range for expected outcomes (mu +/- 5sigma). For a given index,
     # this should happen 99.99994% of the time of the time.
@@ -69,4 +71,5 @@ def test_get_batch():
             context_length=context_length,
             device="cuda:99",
         )
-        assert "CUDA error" in str(excinfo.value) or "Torch not compiled with CUDA enabled" in str(excinfo.value)
+        assert "CUDA error" in str(
+            excinfo.value) or "Torch not compiled with CUDA enabled" in str(excinfo.value)

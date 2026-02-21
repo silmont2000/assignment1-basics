@@ -18,6 +18,8 @@ from .bpe.bpe_tokenizer import bpe_tokenizer
 
 config = {}
 
+config['optim_notes'] = "Fixed OOM: batch_size 256 调整到 128"
+
 # model
 config['vocab_size'] = 1000
 config['d_model'] = 512
@@ -39,14 +41,13 @@ config['max_iters'] = 15000
 # 退火
 config['warmup_iters'] = config['max_iters']*0.05
 config['cosine_cycle_iters'] = config['max_iters']
-config['max_learning_rate'] = 8e-4
+config['max_learning_rate'] = 1e-3
 config['min_learning_rate'] = 8e-5
-#
 config['max_l2_norm'] = 1
 
 
 # batch
-config['batch_size'] = 64
+config['batch_size'] = 128
 config['context_length'] = 256
 if torch.cuda.is_available():
     device = "cuda"
@@ -56,5 +57,5 @@ else:
     device = "cpu"
 
 # ckpt
-save_interval = 50
+save_interval = 500
 eval_interval = 100

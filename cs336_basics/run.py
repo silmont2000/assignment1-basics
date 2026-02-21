@@ -97,9 +97,9 @@ if __name__ == "__main__":
     )
     ckpt_path = os.path.join(base_dir, "ckpt_step_200.pth")
     load_checkpoint(
-        '/Users/xieboyang/Desktop/Robotic/CS36/ckpt_step_200.pth', model, optimizer)
+        '/Users/xieboyang/Desktop/Robotic/CS36/ckpt_step_500.pth', model, optimizer)
 
-    prompt = "从前"
+    prompt = "Once upon a time there was a little boy named Ben."
     output = decode(prompt, 200, 0.8, 0.9, tokenizer, model)
     print("Prompt:", prompt)
     print("Output:", output)

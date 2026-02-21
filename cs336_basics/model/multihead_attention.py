@@ -42,7 +42,7 @@ class MultiHeadAttention(nn.Module):
             # V = self.RoPE_layer.forward(
             # x=V, token_positions=token_positions)
 
-        mask = torch.tril(torch.ones(seq_len, seq_len)).bool()
+        mask = torch.tril(torch.ones(seq_len, seq_len, device=x.device)).bool()
 
         attention = scaled_dot_product_attention(Q, K, V, mask=mask)
         combined_attention = rearrange(attention, '... h s d -> ... s (h d)')

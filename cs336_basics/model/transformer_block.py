@@ -11,14 +11,14 @@ class TransformerBlock(nn.Module):
     def __init__(self, d_model: int, num_heads: int, d_ff: int, theta: float = 0, max_seq_len: int = 0,   device=None, dtype=None):
         super().__init__()
         self.RMSNorm_layer1 = RMSNorm(
-            d_model=d_model, device=device, dtype=dtype)
+            d_model=d_model, device=None, dtype=dtype)
         self.RMSNorm_layer2 = RMSNorm(
-            d_model=d_model, device=device, dtype=dtype)
+            d_model=d_model, device=None, dtype=dtype)
         self.theta = theta
         self.multi_head_attention_layer = MultiHeadAttention(
             d_model=d_model, num_heads=num_heads, theta=theta, max_seq_len=max_seq_len)
         self.SwiGLU_layer = SwiGLU(
-            d_model=d_model, d_ff=d_ff,  device=device, dtype=dtype)
+            d_model=d_model, d_ff=d_ff,  device=None, dtype=dtype)
 
     def forward(self, x: Tensor):
         rms1 = self.RMSNorm_layer1.forward(x)

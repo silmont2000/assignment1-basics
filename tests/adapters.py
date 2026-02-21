@@ -430,6 +430,7 @@ def run_transformer_lm(
         num_heads=num_heads,
         d_ff=d_ff,
         theta=rope_theta,
+        device='mps'
     )
     model.token_embedding.weight.data = weights["token_embeddings.weight"]
     for i in range(num_layers):

@@ -8,12 +8,13 @@ from cs336_basics.model.transformer_block import TransformerBlock
 
 
 class TransformerLM(nn.Module):
-    def __init__(self, vocab_size, d_model, num_layers, num_heads, d_ff, theta, max_seq_len):
+    def __init__(self, vocab_size, d_model, num_layers, num_heads, d_ff, theta, max_seq_len, device=None):
         super().__init__()
         self.token_embedding = nn.Embedding(vocab_size, d_model)
 
         self.blocks = nn.ModuleList([
-            TransformerBlock(d_model, num_heads, d_ff, theta, max_seq_len)
+            TransformerBlock(d_model, num_heads, d_ff,
+                             theta, max_seq_len, device)
             for _ in range(num_layers)
         ])
 

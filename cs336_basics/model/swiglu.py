@@ -18,12 +18,9 @@ class SwiGLU(nn.Module):
             d_ff = int(ceil(8./3. * d_model/64)*64)
         self.d_ff = d_ff
 
-        self.W1 = nn.Parameter(torch.empty((d_ff, d_model),
-                                           device=device, dtype=dtype))
-        self.W2 = nn.Parameter(torch.empty((d_model, d_ff),
-                                           device=device, dtype=dtype))
-        self.W3 = nn.Parameter(torch.empty((d_ff, d_model),
-                                           device=device, dtype=dtype))
+        self.W1 = nn.Parameter(torch.empty((d_ff, d_model), dtype=dtype))
+        self.W2 = nn.Parameter(torch.empty((d_model, d_ff), dtype=dtype))
+        self.W3 = nn.Parameter(torch.empty((d_ff, d_model), dtype=dtype))
 
         for p in [self.W1, self.W2, self.W3]:
             torch.nn.init.trunc_normal_(p)

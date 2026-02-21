@@ -6,13 +6,13 @@ from cs336_basics import *
 
 
 # model
-vocab_size = 128256
-d_model = 0
-num_layers = 0
-num_heads = 0
-d_ff = 0
-theta = 0
-max_seq_len = 0
+vocab_size = 1000
+d_model = 512
+num_layers = 4
+num_heads = 16
+d_ff = 1344
+theta = 10000
+max_seq_len = 256
 
 # 优化器
 lr = 1e-3
@@ -21,20 +21,26 @@ betas = (0.9, 0.999)
 eps = 1e-8
 
 # 迭代
-max_iters = 1000
+# max_iters = 15000
+max_iters = 50
 # 退火
-warmup_iters = 10
-cosine_cycle_iters = (max_iters-warmup_iters)*0.9
-max_learning_rate = 0.1
-min_learning_rate = 0.001
+warmup_iters = max_iters*0.05
+cosine_cycle_iters = max_iters
+max_learning_rate = 8e-4
+min_learning_rate = 8e-5
 #
-max_l2_norm = 0.1
+max_l2_norm = 1
 
 
 # batch
-batch_size = 1024
-context_length = 1024
-device = 'mps'
+batch_size = 256
+context_length = 256
+if torch.cuda.is_available():
+    device = "cuda"
+elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+    device = "mps"
+else:
+    device = "cpu"
 
 # ckpt
 save_interval = 100
@@ -43,7 +49,8 @@ eval_interval = 100
 
 def train_loop(train_data, val_data):
     model = TransformerLM(vocab_size, d_model, num_layers,
-                          num_heads, d_ff, theta, max_seq_len)
+                          num_heads, d_ff, theta, max_seq_len, device)
+    model = model.to(device)
     optimizer = AdamW(
         params=model.parameters(),
         lr=lr,
@@ -97,3 +104,17 @@ def train_loop(train_data, val_data):
             save_checkpoint(model, optimizer, it, f"ckpt_step_{it}.pth")
 
     print(f"训练完成！总耗时: {time.time() - start_time:.2f}s")
+
+
+if __name__ == "__main__":
+    base_dir = os.path.dirname(os.path.dirname(__file__))
+    tokenizer_dir = os.path.join(base_dir, "tokenizer")
+    train_path = os.path.join(
+        tokenizer_dir, "TinyStoriesV2-GPT4-train-token.bin")
+    valid_path = os.path.join(
+        tokenizer_dir, "TinyStoriesV2-GPT4-valid-token.bin")
+
+    train_data = np.memmap(train_path, dtype=np.uint16, mode="r")
+    val_data = np.memmap(valid_path, dtype=np.uint16, mode="r")
+
+    train_loop(train_data, val_data)

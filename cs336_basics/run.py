@@ -76,6 +76,7 @@ if __name__ == "__main__":
         cfg["max_seq_len"],
         device,
     )
+    # print(model)
     model = model.to(device)
     optimizer = AdamW(
         params=model.parameters(),
@@ -96,11 +97,11 @@ if __name__ == "__main__":
         special_tokens=["<|endoftext|>"],
     )
     parent_dir = os.path.dirname(base_dir)
-    resume_ckpt = os.path.join(parent_dir, "ckpt_step_3500.pth")
+    resume_ckpt = os.path.join(parent_dir, "ckpt_step_14500.pth")
 
     load_checkpoint(resume_ckpt, model, optimizer)
 
-    prompt = "Once upon a time there was a little boy named Ben."
+    prompt = "a apple falls."
     output = decode(prompt, 200, 0.8, 0.9, tokenizer, model)
-    print("Prompt:", prompt)
+    # print("Prompt:", prompt)
     print("Output:", output)

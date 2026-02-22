@@ -47,7 +47,7 @@ config['max_l2_norm'] = 1
 
 
 # batch
-config['batch_size'] = 128
+config['batch_size'] = 36
 config['context_length'] = 256
 if torch.cuda.is_available():
     device = "cuda"

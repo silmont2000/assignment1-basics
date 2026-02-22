@@ -135,12 +135,12 @@ if __name__ == "__main__":
     val_data = np.memmap(valid_path, dtype=np.uint16, mode="r")
 
     parent_dir = os.path.dirname(base_dir)
-    resume_ckpt = os.path.join(parent_dir, "ckpt_step_2000.pth")
+    resume_ckpt = os.path.join(parent_dir, "ckpt_step_3500.pth")
 
     wandb.init(
         project="cs336-a1-transformer",
         config=config,
-        notes=f"从{resume_ckpt}开始"
+        notes=f"从{resume_ckpt}开始,batch_size=36,max_iters=5000,以减小耗时"
     )
     try:
         run_cfg = wandb.config

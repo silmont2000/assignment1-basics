@@ -3,6 +3,7 @@ from collections import Counter
 
 import numpy as np
 import pytest
+import torch
 
 from .adapters import run_get_batch
 
@@ -11,7 +12,13 @@ def test_get_batch():
     dataset = np.arange(0, 100)
     context_length = 7
     batch_size = 32
-    device = "mps"
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda"
+    elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        device = "mps"
+    else:
+        device = "cpu"
 
     # Sanity check to make sure that the random samples are indeed somewhat random.
     starting_indices = Counter()

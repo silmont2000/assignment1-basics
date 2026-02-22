@@ -18,7 +18,7 @@ from .bpe.bpe_tokenizer import bpe_tokenizer
 
 config = {}
 
-config['optim_notes'] = "Fixed OOM: batch_size 256 调整到 128"
+# config['optim_notes'] = "Fixed OOM: batch_size 256 调整到 128"
 
 # model
 config['vocab_size'] = 1000

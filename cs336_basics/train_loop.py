@@ -1,9 +1,9 @@
 import os
-import wandb
-import numpy as np
 import time
-import torch
 
+import numpy as np
+import torch
+import wandb
 
 from cs336_basics import (
     AdamW,
@@ -15,12 +15,13 @@ from cs336_basics import (
     eval_interval,
     get_batch,
     gradient_clipping,
+    load_checkpoint,
     save_checkpoint,
     save_interval,
 )
 
 
-def train_loop(train_data, val_data, cfg):
+def train_loop(train_data, val_data, cfg, resume_path: str | None = None):
     model = TransformerLM(
         cfg["vocab_size"],
         cfg["d_model"],
@@ -31,7 +32,7 @@ def train_loop(train_data, val_data, cfg):
         cfg["max_seq_len"],
         device,
     )
-    model = model.to(device)
+    model = model.to(device)  # 在这to 统一修改所有param
     optimizer = AdamW(
         params=model.parameters(),
         lr=cfg["lr"],
@@ -40,9 +41,13 @@ def train_loop(train_data, val_data, cfg):
         eps=cfg["eps"],
     )
 
+    start_it = 0
+    if resume_path is not None and os.path.exists(resume_path):
+        start_it = load_checkpoint(resume_path, model, optimizer)
+
     start_time = time.time()
 
-    for it in range(cfg["max_iters"]):
+    for it in range(start_it, cfg["max_iters"]):
         model.train()
         # A. 更新学习率 (余弦退火)
         cur_lr = cos_annealing_lr(
@@ -74,7 +79,7 @@ def train_loop(train_data, val_data, cfg):
         # 对应之前的 custom_grad_clipping
         total_norm = gradient_clipping(
             model.parameters(), cfg["max_l2_norm"]
-        )  # type: ignore
+        )
 
         optimizer.step()
         wandb.log(
@@ -111,7 +116,6 @@ def train_loop(train_data, val_data, cfg):
                 print(f"--- Step {it}: Val Loss {v_loss.item():.4f} ---")
             model.train()  # 切回训练模式
         if it % save_interval == 0:
-            # 对应图片第三点：序列化到指定路径
             save_checkpoint(model, optimizer, it, f"ckpt_step_{it}.pth")
 
     print(f"训练完成！总耗时: {time.time() - start_time:.2f}s")
@@ -130,12 +134,16 @@ if __name__ == "__main__":
     train_data = np.memmap(train_path, dtype=np.uint16, mode="r")
     val_data = np.memmap(valid_path, dtype=np.uint16, mode="r")
 
+    parent_dir = os.path.dirname(base_dir)
+    resume_ckpt = os.path.join(parent_dir, "ckpt_step_2000.pth")
+
     wandb.init(
         project="cs336-a1-transformer",
         config=config,
+        notes=f"从{resume_ckpt}开始"
     )
     try:
         run_cfg = wandb.config
-        train_loop(train_data, val_data, run_cfg)
+        train_loop(train_data, val_data, run_cfg, resume_path=resume_ckpt)
     finally:
         wandb.finish()

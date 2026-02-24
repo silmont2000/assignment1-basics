@@ -21,7 +21,7 @@ config = {}
 # config['optim_notes'] = "Fixed OOM: batch_size 256 调整到 128"
 
 # model
-config['vocab_size'] = 1000
+config['vocab_size'] = 10000
 config['d_model'] = 512
 config['num_layers'] = 4
 config['num_heads'] = 16
@@ -31,7 +31,7 @@ config['max_seq_len'] = 256
 
 # 优化器
 config['lr'] = 1e-3
-config['weight_decay'] = 0.01
+config['weight_decay'] = 0.1
 config['betas'] = (0.9, 0.999)
 config['eps'] = 1e-8
 
@@ -41,13 +41,13 @@ config['max_iters'] = 15000
 # 退火
 config['warmup_iters'] = config['max_iters']*0.05
 config['cosine_cycle_iters'] = config['max_iters']
-config['max_learning_rate'] = 1e-3
+config['max_learning_rate'] = 0.0015
 config['min_learning_rate'] = 8e-5
-config['max_l2_norm'] = 1
+config['max_l2_norm'] = 0.5
 
 
 # batch
-config['batch_size'] = 36
+config['batch_size'] = 32
 config['context_length'] = 256
 if torch.cuda.is_available():
     device = "cuda"

@@ -54,7 +54,8 @@ class AdamW(torch.optim.Optimizer):
 
                 # vt = β2*vt_1+(1-β2)*grad*grad
                 # state["v"] = vt
-                vt_1.mul_(β2).addcmul_(grad, grad, value=1 - β2)
+                vt_1.mul_(β2).addcmul_(
+                    grad, grad, value=1 - β2).clamp_(min=0.0)
 
                 bias_correction1 = 1 - β1 ** t
                 bias_correction2 = 1 - β2 ** t
@@ -68,4 +69,18 @@ class AdamW(torch.optim.Optimizer):
                 # 作用于学习率更省性能
 
                 state["t"] = t + 1  # 时间步更新
+
+                if torch.isnan(p.data).any() or torch.isinf(p.data).any():
+                    print(f"[AdamW-DEBUG] param became NaN/inf AFTER update ")
+                    print("  grad min/max:",
+                          float(grad.min()), float(grad.max()))
+                    print("  m min/max:", float(mt_1.min()),
+                          float(mt_1.max()))
+                    print("  v min/max:", float(vt_1.min()),
+                          float(vt_1.max()))
+                    print("  denom min/max:",
+                          float(denom.min()), float(denom.max()))
+                    print("  param min/max:", float(p.data.min()),
+                          float(p.data.max()))
+                    return loss
         return loss

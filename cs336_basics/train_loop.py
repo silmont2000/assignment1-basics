@@ -21,6 +21,21 @@ from cs336_basics import (
 )
 
 
+def debug_check(model, optimizer):
+    p0 = next(model.parameters())
+    print("param device:", p0.device, "dtype:", p0.dtype)
+
+    for group in optimizer.param_groups:
+        for p in group["params"]:
+            st = optimizer.state[p]
+            for k, v in st.items():
+                if isinstance(v, torch.Tensor):
+                    print("state", k, "device:", v.device, "dtype:", v.dtype,
+                          "max:", float(v.abs().max()))
+            break
+        break
+
+
 def train_loop(train_data, val_data, cfg, resume_path: str | None = None):
     model = TransformerLM(
         cfg["vocab_size"],
@@ -43,9 +58,12 @@ def train_loop(train_data, val_data, cfg, resume_path: str | None = None):
 
     start_it = 0
     if resume_path is not None and os.path.exists(resume_path):
-        start_it = load_checkpoint(resume_path, model, optimizer)
+        start_it = 1 + load_checkpoint(
+            resume_path, model, optimizer, device=device)
 
     start_time = time.time()
+    p0 = next(model.parameters())
+    debug_check(model, optimizer)
 
     for it in range(start_it, cfg["max_iters"]):
         model.train()
@@ -134,16 +152,17 @@ if __name__ == "__main__":
     train_data = np.memmap(train_path, dtype=np.uint16, mode="r")
     val_data = np.memmap(valid_path, dtype=np.uint16, mode="r")
 
-    parent_dir = os.path.dirname(base_dir)
-    resume_ckpt = os.path.join(parent_dir, "ckpt_step_3500.pth")
-
+    ckpts_dir = os.path.join(base_dir, "ckpts")
+    resume_ckpt = os.path.join(ckpts_dir, "ckpt_step_3500.pth")
+    resume_ckpt = "/Users/xieboyang/Desktop/Robotic/CS36/ckpt_step_8000.pth"
     wandb.init(
         project="cs336-a1-transformer",
-        config=config,
-        notes=f"从{resume_ckpt}开始,batch_size=36,max_iters=5000,以减小耗时"
+        name='测试断点续连 加log',
+        config=config
     )
     try:
         run_cfg = wandb.config
-        train_loop(train_data, val_data, run_cfg, resume_path=resume_ckpt)
+        train_loop(train_data, val_data, run_cfg, resume_ckpt)
     finally:
+        print("done!")
         wandb.finish()

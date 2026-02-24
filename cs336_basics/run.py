@@ -96,12 +96,13 @@ if __name__ == "__main__":
         merges=data["merges"],
         special_tokens=["<|endoftext|>"],
     )
-    parent_dir = os.path.dirname(base_dir)
-    resume_ckpt = os.path.join(parent_dir, "ckpt_step_14500.pth")
+    ckpts_dir = os.path.join(base_dir, "ckpts")
+    resume_ckpt = os.path.join(ckpts_dir, "ckpt_step_2000.pth")
 
-    load_checkpoint(resume_ckpt, model, optimizer)
+    load_checkpoint(
+        '/Users/xieboyang/Desktop/Robotic/CS36/ckpt_step_4500.pth', model, optimizer, device=device)
 
-    prompt = "a apple falls."
+    prompt = "One day,Lily"
     output = decode(prompt, 200, 0.8, 0.9, tokenizer, model)
     # print("Prompt:", prompt)
     print("Output:", output)

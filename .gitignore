@@ -6,10 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+
 # big Files or data
 data/*
 tokenizer/*
 ckpts/*
+*.pth
 
 # Distribution / packaging
 .Python

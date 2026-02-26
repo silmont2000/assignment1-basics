@@ -24,7 +24,7 @@ def decode(prompt, max_tokens, temperature, top_p, tokenizer: bpe_tokenizer, mod
         input_ids = torch.tensor(tokens, dtype=torch.long,
                                  device=device).unsqueeze(0)
         with torch.no_grad():
-            logits = model.forward(input_ids)
+            logits = model.forward(input_ids, use_cache=True)['logits']
         next_token_logits = logits[0, -1, :]
         next_token_logits = next_token_logits / temperature
 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     resume_ckpt = os.path.join(ckpts_dir, "ckpt_step_2000.pth")
 
     load_checkpoint(
-        '/Users/xieboyang/Desktop/Robotic/CS36/ckpt_step_4500.pth', model, optimizer, device=device)
+        '/Users/xieboyang/Desktop/Robotic/CS36/ckpt-修复二阶动量Nan问题后跑的/ckpt_step_14500.pth', model, optimizer, device=device)
 
     prompt = "One day,Lily"
     output = decode(prompt, 200, 0.8, 0.9, tokenizer, model)

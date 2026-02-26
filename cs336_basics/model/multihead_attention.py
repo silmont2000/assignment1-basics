@@ -23,15 +23,17 @@ class MultiHeadAttention(nn.Module):
             self.RoPE_layer = RotaryPositionalEmbedding(
                 theta=theta, d_k=self.d_model//self.num_heads, max_seq_len=max_seq_len)
 
-    def forward(self, x: torch.Tensor, token_positions: Int[Tensor, " ... sequence_length"] | None = None):
+    def forward(self, x: torch.Tensor, token_positions: Int[Tensor, " ... sequence_length"] | None = None,
+                kv_cache: tuple[torch.Tensor, torch.Tensor] | None = None,
+                use_cache: bool = False):
 
 
         # fmt: off
+        # 输入 x (Batch, Sequence_Length, Hidden_Dim) 就是一个批次的token
         K = rearrange(self.WK.forward(x), '... s (h d) -> ... h s d', h=self.num_heads)
         Q = rearrange(self.WQ.forward(x), '... s (h d) -> ... h s d', h=self.num_heads)
         V = rearrange(self.WV.forward(x), '... s (h d) -> ... h s d', h=self.num_heads)
         # fmt: on
-        batch, seq_len, _ = x.shape
 
         if token_positions is not None and self.RoPE_layer:
             K = self.RoPE_layer.forward(
@@ -42,9 +44,19 @@ class MultiHeadAttention(nn.Module):
             # V = self.RoPE_layer.forward(
             # x=V, token_positions=token_positions)
 
-        mask = torch.tril(torch.ones(seq_len, seq_len, device=x.device)).bool()
+        if kv_cache is not None:
+            K = torch.cat([kv_cache[0], K], dim=-2)
+            V = torch.cat([kv_cache[1], V], dim=-2)
+
+        q_len = Q.shape[-2]
+        kv_len = K.shape[-2]
+        mask = torch.tril(torch.ones(kv_len, kv_len, device=x.device)).bool()
+        mask = mask[kv_len - q_len: kv_len, :kv_len]
 
         attention = scaled_dot_product_attention(Q, K, V, mask=mask)
         combined_attention = rearrange(attention, '... h s d -> ... s (h d)')
 
-        return self.WO.forward(combined_attention)
+        output = self.WO.forward(combined_attention)
+        if use_cache or kv_cache is not None:
+            return {"attention": output, "kv": (K, V)}
+        return {"attention": output, "kv": None}

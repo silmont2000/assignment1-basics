@@ -87,7 +87,7 @@ def train_loop(train_data, val_data, cfg, resume_path: str | None = None):
         )
 
         # C. 前向传播与损失计算
-        logits = model.forward(x)
+        logits = model.forward(x, use_cache=True)['logits']
         loss = cross_entropy(inputs=logits, targets=y)
 
         # D. 反向传播与梯度裁剪
@@ -122,7 +122,7 @@ def train_loop(train_data, val_data, cfg, resume_path: str | None = None):
                     cfg["context_length"],
                     device,
                 )
-                v_logits = model(vx)
+                v_logits = model.forward(vx)['logits']
                 v_loss = cross_entropy(v_logits, vy)
                 wandb.log(
                     {
@@ -154,15 +154,15 @@ if __name__ == "__main__":
 
     ckpts_dir = os.path.join(base_dir, "ckpts")
     resume_ckpt = os.path.join(ckpts_dir, "ckpt_step_3500.pth")
-    resume_ckpt = "/Users/xieboyang/Desktop/Robotic/CS36/ckpt_step_8000.pth"
+    resume_ckpt = "/Users/xieboyang/Desktop/Robotic/CS36/ckpt_step_1000.pth"
     wandb.init(
         project="cs336-a1-transformer",
-        name='测试断点续连 加log',
+        name='大词表 6层8个头',
         config=config
     )
     try:
         run_cfg = wandb.config
-        train_loop(train_data, val_data, run_cfg, resume_ckpt)
+        train_loop(train_data, val_data, run_cfg)
     finally:
         print("done!")
         wandb.finish()

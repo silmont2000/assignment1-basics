@@ -169,7 +169,7 @@ def run_multihead_self_attention(
     multi_head_attention_layer.WK.W.data = k_proj_weight
     multi_head_attention_layer.WV.W.data = v_proj_weight
     multi_head_attention_layer.WO.W.data = o_proj_weight
-    return multi_head_attention_layer.forward(x=in_features)
+    return multi_head_attention_layer.forward(x=in_features)['attention']
 
     # raise NotImplementedError
 
@@ -221,7 +221,7 @@ def run_multihead_self_attention_with_rope(
     multi_head_attention_layer.WO.W.data = o_proj_weight
     attention = multi_head_attention_layer.forward(
         x=in_features, token_positions=token_positions)
-    return attention
+    return attention['attention']
     # raise NotImplementedError
 
 
@@ -337,7 +337,7 @@ def run_transformer_block(
         "W3": weights['ffn.w3.weight']
     }
     block.SwiGLU_layer.load_state_dict(state_dict)
-    return block.forward(in_features)
+    return block.forward(in_features)['res2']
 
     # raise NotImplementedError
 
@@ -461,7 +461,7 @@ def run_transformer_lm(
     model.final_norm.W.data = weights["ln_final.weight"]
     model.final_linear.W.data = weights["lm_head.weight"]
 
-    return model.forward(in_indices)
+    return model.forward(in_indices)['logits']
 
 
 def run_rmsnorm(

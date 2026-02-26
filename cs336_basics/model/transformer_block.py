@@ -20,16 +20,29 @@ class TransformerBlock(nn.Module):
         self.SwiGLU_layer = SwiGLU(
             d_model=d_model, d_ff=d_ff,  device=None, dtype=dtype)
 
-    def forward(self, x: Tensor):
+    def forward(self, x: Tensor, token_positions: Tensor | None = None,
+                kv_cache: tuple[Tensor, Tensor] | None = None,
+                use_cache: bool = False):
         rms1 = self.RMSNorm_layer1.forward(x)
-        token_positions = None
-        if self.theta > 0:
+        if token_positions is None and self.theta > 0:
             t = x.shape[1]
             token_positions = torch.arange(t, device=x.device)
-        attention = self.multi_head_attention_layer.forward(
-            x=rms1, token_positions=token_positions)
+
+        mha_output = self.multi_head_attention_layer.forward(
+            x=rms1, token_positions=token_positions, kv_cache=kv_cache, use_cache=use_cache)
+
+        new_kv_cache = None
+        if use_cache or kv_cache is not None:
+            attention = mha_output['attention']
+            new_kv_cache = mha_output['kv']
+        else:
+            attention = mha_output['attention']
+
         res1 = x + attention
         rms2 = self.RMSNorm_layer2.forward(res1)
         swiglu = self.SwiGLU_layer.forward(rms2)
         res2 = res1 + swiglu
-        return res2
+
+        if use_cache or kv_cache is not None:
+            return {"res2": res2, "new_kv_cache": new_kv_cache}
+        return {"res2": res2, "new_kv_cache": None}

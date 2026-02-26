@@ -21,11 +21,12 @@ config = {}
 # config['optim_notes'] = "Fixed OOM: batch_size 256 调整到 128"
 
 # model
-config['vocab_size'] = 10000
+config['vocab_size'] = 32000
 config['d_model'] = 512
-config['num_layers'] = 4
-config['num_heads'] = 16
-config['d_ff'] = 1344
+config['num_layers'] = 6
+config['num_heads'] = 8
+config['d_ff'] = (8/3 * config['d_model'])//256*256  # FFN层的中间隐藏层维度
+# config['d_ff'] = 1344  # FFN层的中间隐藏层维度
 config['theta'] = 10000
 config['max_seq_len'] = 256
 
@@ -36,14 +37,14 @@ config['betas'] = (0.9, 0.999)
 config['eps'] = 1e-8
 
 # 迭代
-config['max_iters'] = 15000
+config['max_iters'] = 15001
 # max_iters = 50
 # 退火
 config['warmup_iters'] = config['max_iters']*0.05
 config['cosine_cycle_iters'] = config['max_iters']
 config['max_learning_rate'] = 0.0015
 config['min_learning_rate'] = 8e-5
-config['max_l2_norm'] = 0.5
+config['max_l2_norm'] = 0.99
 
 
 # batch

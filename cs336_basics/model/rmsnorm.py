@@ -10,7 +10,8 @@ class RMSNorm(nn.Module):
         self.d_model = d_model
 
         matrix = torch.empty((1, d_model), dtype=dtype)
-        torch.nn.init.trunc_normal_(matrix)
+        # RMSNorm 的 scale 应该初始化为 1
+        torch.nn.init.ones_(matrix)
         self.W = nn.Parameter(matrix)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

@@ -23,7 +23,8 @@ class SwiGLU(nn.Module):
         self.W3 = nn.Parameter(torch.empty((d_ff, d_model), dtype=dtype))
 
         for p in [self.W1, self.W2, self.W3]:
-            torch.nn.init.trunc_normal_(p)
+            # 使用 GPT 风格的初始化：std=0.02
+            torch.nn.init.trunc_normal_(p, std=0.02)
 
     def forward(self, x:  Float[Tensor, " ... d_model"]):
         in_dtype = x.dtype

@@ -25,30 +25,30 @@ config['vocab_size'] = 32000
 config['d_model'] = 512
 config['num_layers'] = 6
 config['num_heads'] = 8
-config['d_ff'] = (8/3 * config['d_model'])//256*256  # FFN层的中间隐藏层维度
-# config['d_ff'] = 1344  # FFN层的中间隐藏层维度
+config['d_ff'] = 1344  # FFN层的中间隐藏层维度 (SwiGLU 标准推荐为 8/3 * d_model)
 config['theta'] = 10000
 config['max_seq_len'] = 256
 
 # 优化器
-config['lr'] = 1e-3
-config['weight_decay'] = 0.1
-config['betas'] = (0.9, 0.999)
+config['lr'] = 6e-4
+config['weight_decay'] = 0.01
+config['betas'] = (0.9, 0.99)
 config['eps'] = 1e-8
 
 # 迭代
-config['max_iters'] = 15001
+config['max_iters'] = 1001
 # max_iters = 50
 # 退火
-config['warmup_iters'] = config['max_iters']*0.05
-config['cosine_cycle_iters'] = config['max_iters']
-config['max_learning_rate'] = 0.0015
-config['min_learning_rate'] = 8e-5
-config['max_l2_norm'] = 0.99
+config['warmup_iters'] = 50
+config['cosine_cycle_iters'] = 1000
+config['max_learning_rate'] = 6e-4
+config['min_learning_rate'] = 1e-5
+config['max_l2_norm'] = 1.0
 
 
 # batch
 config['batch_size'] = 32
+config['gradient_accumulation_steps'] = 1  # 梯度累积步数，若 OOM 可调小 batch_size 并调大此参数
 config['context_length'] = 256
 if torch.cuda.is_available():
     device = "cuda"

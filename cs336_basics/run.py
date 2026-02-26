@@ -100,7 +100,7 @@ if __name__ == "__main__":
     resume_ckpt = os.path.join(ckpts_dir, "ckpt_step_2000.pth")
 
     load_checkpoint(
-        '/Users/xieboyang/Desktop/Robotic/CS36/ckpt-修复二阶动量Nan问题后跑的/ckpt_step_14500.pth', model, optimizer, device=device)
+        '/Users/xieboyang/Desktop/Robotic/CS36/ckpt_step_1000.pth', model, optimizer, device=device)
 
     prompt = "One day,Lily"
     output = decode(prompt, 200, 0.8, 0.9, tokenizer, model)

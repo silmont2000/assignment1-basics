@@ -65,6 +65,9 @@ def train_loop(train_data, val_data, cfg, resume_path: str | None = None):
     p0 = next(model.parameters())
     debug_check(model, optimizer)
 
+    grad_accum_steps = cfg.get("gradient_accumulation_steps", 1)
+    optimizer.zero_grad(set_to_none=True)
+
     for it in range(start_it, cfg["max_iters"]):
         model.train()
         # A. 更新学习率 (余弦退火)
@@ -78,41 +81,47 @@ def train_loop(train_data, val_data, cfg, resume_path: str | None = None):
         for param_group in optimizer.param_groups:
             param_group['lr'] = cur_lr
 
-        # B. 获取 Batch 数据
-        x, y = get_batch(
-            dataset=train_data,
-            batch_size=cfg["batch_size"],
-            context_length=cfg["context_length"],
-            device=device,
-        )
+        # B. 梯度累积循环
+        total_loss = 0
+        for _ in range(grad_accum_steps):
+            # 获取 Batch 数据
+            x, y = get_batch(
+                dataset=train_data,
+                batch_size=cfg["batch_size"],
+                context_length=cfg["context_length"],
+                device=device,
+            )
 
-        # C. 前向传播与损失计算
-        logits = model.forward(x, use_cache=True)['logits']
-        loss = cross_entropy(inputs=logits, targets=y)
+            # C. 前向传播与损失计算
+            # 损失除以累积步数以保持量纲一致
+            logits = model.forward(x, use_cache=True)['logits']
+            loss = cross_entropy(inputs=logits, targets=y) / grad_accum_steps
+            total_loss += loss.item()
 
-        # D. 反向传播与梯度裁剪
-        optimizer.zero_grad(set_to_none=True)
-        loss.backward()
+            # D. 反向传播
+            loss.backward()
 
-        # 对应之前的 custom_grad_clipping
+        # E. 梯度裁剪与优化
         total_norm = gradient_clipping(
             model.parameters(), cfg["max_l2_norm"]
         )
 
         optimizer.step()
+        optimizer.zero_grad(set_to_none=True)
+
         wandb.log(
             {
                 "iter": it,
-                "train/loss": loss.item(),
+                "train/loss": total_loss,
                 "lr": cur_lr,
-                "grad_norm": total_norm.item(),
+                "grad_norm": total_norm.item() if isinstance(total_norm, torch.Tensor) else total_norm,
             },
             step=it,
         )
 
         if it % 10 == 0:
             print(
-                f"Iter {it}: Loss {loss.item():.4f}, LR {cur_lr:.2e}, Norm {total_norm:.2f}")
+                f"Iter {it}: Loss {total_loss:.4f}, LR {cur_lr:.2e}, Norm {total_norm:.2f}")
         if it % eval_interval == 0:
             model.eval()  # 开启评估模式（关闭 Dropout 等）
             with torch.no_grad():  # 验证时不计算梯度，省显存
@@ -152,17 +161,17 @@ if __name__ == "__main__":
     train_data = np.memmap(train_path, dtype=np.uint16, mode="r")
     val_data = np.memmap(valid_path, dtype=np.uint16, mode="r")
 
-    ckpts_dir = os.path.join(base_dir, "ckpts")
-    resume_ckpt = os.path.join(ckpts_dir, "ckpt_step_3500.pth")
-    resume_ckpt = "/Users/xieboyang/Desktop/Robotic/CS36/ckpt_step_1000.pth"
+    # 注意：由于修改了模型架构（d_model 288 -> 512），旧的 checkpoint 无法直接加载。
+    # 如果需要断点续传，请确保 checkpoint 对应的架构一致。
+    resume_ckpt = None
     wandb.init(
         project="cs336-a1-transformer",
-        name='大词表 6层8个头',
+        name='TinyStories-6L-8H-512D-1000Steps',
         config=config
     )
     try:
         run_cfg = wandb.config
-        train_loop(train_data, val_data, run_cfg)
+        train_loop(train_data, val_data, run_cfg, resume_path=resume_ckpt)
     finally:
         print("done!")
         wandb.finish()

@@ -163,7 +163,7 @@ if __name__ == "__main__":
 
     # 注意：由于修改了模型架构（d_model 288 -> 512），旧的 checkpoint 无法直接加载。
     # 如果需要断点续传，请确保 checkpoint 对应的架构一致。
-    resume_ckpt = None
+    resume_ckpt = '/Users/xieboyang/Desktop/Robotic/CS36/ckpt_step_1000.pth'
     wandb.init(
         project="cs336-a1-transformer",
         name='TinyStories-6L-8H-512D-1000Steps',

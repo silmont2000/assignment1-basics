@@ -100,9 +100,9 @@ if __name__ == "__main__":
     resume_ckpt = os.path.join(ckpts_dir, "ckpt_step_2000.pth")
 
     load_checkpoint(
-        '/Users/xieboyang/Desktop/Robotic/CS36/ckpt_step_1000.pth', model, optimizer, device=device)
+        '/Users/xieboyang/Desktop/Robotic/CS36/ckpt-修复了初始化标准差问题的/ckpt_step_7000.pth', model, optimizer, device=device)
 
-    prompt = "One day,Lily"
+    prompt = "One day,"
     output = decode(prompt, 200, 0.8, 0.9, tokenizer, model)
     # print("Prompt:", prompt)
     print("Output:", output)

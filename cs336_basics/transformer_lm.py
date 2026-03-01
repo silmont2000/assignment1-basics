@@ -6,6 +6,13 @@ from cs336_basics.model.embedding import Embedding
 from cs336_basics.model.linear import Linear
 from cs336_basics.model.common import softmax
 from cs336_basics.model.transformer_block import TransformerBlock
+from typing import TypedDict, List, Tuple, Optional
+from torch import Tensor
+
+
+class ForwardOutput(TypedDict):
+    logits: Tensor
+    new_kv_caches: Optional[List[Tuple[Tensor, Tensor]]]
 
 
 class TransformerLM(nn.Module):
@@ -25,7 +32,7 @@ class TransformerLM(nn.Module):
         self.final_linear = Linear(d_model, vocab_size)
 
     def forward(self, input_ids, kv_caches: list[tuple[Tensor, Tensor]] | None = None,
-                use_cache: bool = False):
+                use_cache: bool = False) -> ForwardOutput:
         x = self.token_embedding.forward(token_ids=input_ids)
 
         # Handle token positions for RoPE

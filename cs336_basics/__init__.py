@@ -36,11 +36,11 @@ config['betas'] = (0.9, 0.99)
 config['eps'] = 1e-8
 
 # 迭代
-config['max_iters'] = 1001
+config['max_iters'] = 7001
 # max_iters = 50
 # 退火
-config['warmup_iters'] = 50
-config['cosine_cycle_iters'] = 1000
+config['warmup_iters'] = 70
+config['cosine_cycle_iters'] = 7001
 config['max_learning_rate'] = 6e-4
 config['min_learning_rate'] = 1e-5
 config['max_l2_norm'] = 1.0

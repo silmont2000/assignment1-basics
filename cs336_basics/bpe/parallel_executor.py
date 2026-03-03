@@ -16,7 +16,7 @@ def merge_statistics(stats1, stats2):
 
 def _process_chunk(file_path: str, start: int, end: int, special_tokens: list[str]) -> dict:
     PAT = re.compile(
-        """'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+""")
+        r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+""")
     special_pat = re.compile("|".join(re.escape(st)
                              for st in special_tokens)) if special_tokens else None
 

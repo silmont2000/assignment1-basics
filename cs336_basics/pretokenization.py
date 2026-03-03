@@ -90,19 +90,19 @@ def parallel_tokenize_extreme(input_file, tokenizer, target_path, num_processes=
     print(f"{'='*40}")
 
 
-if __name__ == "__main__":
-    # 配置
-    pkl_path = 'assignment1-basics/tokenizer/tokenizer_tinystory.pkl'
-    input_data = 'assignment1-basics/data/TinyStoriesV2-GPT4-train.txt'
-    output_bin = 'TinyStoriesV2-GPT4-train-token.bin'
+# if __name__ == "__main__":
+#     # 配置
+#     pkl_path = 'assignment1-basics/tokenizer/tokenizer_tinystory.pkl'
+#     input_data = 'assignment1-basics/data/TinyStoriesV2-GPT4-train.txt'
+#     output_bin = 'TinyStoriesV2-GPT4-train-token.bin'
 
-    data = load_trained_bpe(pkl_path)
-    tokenizer = bpe_tokenizer(
-        vocab=data["vocab"],
-        merges=data["merges"],
-        special_tokens=["<|endoftext|>"]
-    )
+#     data = load_trained_bpe(pkl_path)
+#     tokenizer = bpe_tokenizer(
+#         vocab=data["vocab"],
+#         merges=data["merges"],
+#         special_tokens=["<|endoftext|>"]
+#     )
 
-    # 既然 CPU 还有富裕，尝试设置到 12-16 (视你的核心数而定)
-    parallel_tokenize_extreme(input_data, tokenizer,
-                              output_bin, num_processes=12)
+#     # 既然 CPU 还有富裕，尝试设置到 12-16 (视你的核心数而定)
+#     parallel_tokenize_extreme(input_data, tokenizer,
+#                               output_bin, num_processes=12)

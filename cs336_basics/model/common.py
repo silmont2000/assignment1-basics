@@ -21,7 +21,8 @@ def scaled_dot_product_attention(Q: Float[Tensor, " ... queries d_k"],
                                  ):
     scores = einsum(Q, K, "... queries d_k, ... keys d_k -> ... queries keys")
     scores = scores / (Q.shape[-1] ** 0.5)
-    minus_inf = -1e9  # 当负无穷使
+    # minus_inf = -1e9  # 当负无穷使
+    minus_inf = torch.finfo(scores.dtype).min
     if mask is not None:
         scores = scores.masked_fill(mask == False, minus_inf)
 
